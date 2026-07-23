@@ -2,7 +2,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
-export function Hero() {
+interface HeroProps {
+  session: { role: "USER" | "ADMIN" } | null;
+}
+
+export function Hero({ session }: HeroProps) {
   return (
     <section className="relative overflow-hidden px-6 pb-20 pt-20 md:pt-28">
       <div
@@ -23,16 +27,26 @@ export function Hero() {
           onboarded by an admin, and watch live signal updates land on your dashboard.
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
-          <Link href="/register">
-            <Button variant="primary" className="px-6 py-3 text-base">
-              Get started
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="secondary" className="px-6 py-3 text-base">
-              Log in
-            </Button>
-          </Link>
+          {session ? (
+            <Link href={session.role === "ADMIN" ? "/admin" : "/dashboard"}>
+              <Button variant="primary" className="px-6 py-3 text-base">
+                Go to {session.role === "ADMIN" ? "admin" : "dashboard"}
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/register">
+                <Button variant="primary" className="px-6 py-3 text-base">
+                  Get started
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="secondary" className="px-6 py-3 text-base">
+                  Log in
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </section>
