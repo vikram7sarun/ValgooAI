@@ -48,6 +48,7 @@ export function AddUserModal({
         email: body.email,
         phone: data.phone ?? null,
         role: body.role,
+        status: "ACTIVE",
         createdAt: new Date().toISOString(),
         enabledAlgoCount: 0,
       });

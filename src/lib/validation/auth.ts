@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+export const passwordStrengthSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Include at least one uppercase letter")
+  .regex(/[0-9]/, "Include at least one number");
+
 export const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -8,11 +14,7 @@ export const registerSchema = z
       .string()
       .min(7, "Enter a valid phone number")
       .regex(/^[0-9+\-\s()]+$/, "Enter a valid phone number"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Include at least one uppercase letter")
-      .regex(/[0-9]/, "Include at least one number"),
+    password: passwordStrengthSchema,
     confirmPassword: z.string(),
     country: z.string().optional(),
     experience: z.string().optional(),

@@ -21,6 +21,7 @@ export function LoginForm() {
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
   const justRegistered = searchParams.get("registered") === "1";
+  const justReset = searchParams.get("reset") === "1";
   const next = searchParams.get("next");
 
   const onSubmit = async (data: LoginInput) => {
@@ -51,7 +52,13 @@ export function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       {justRegistered && (
         <p className="rounded-lg border border-gain/30 bg-gain/10 px-3.5 py-2.5 text-sm text-gain">
-          Account created — log in to continue.
+          Account created — your account is pending admin approval. You&apos;ll be able to log in
+          once approved.
+        </p>
+      )}
+      {justReset && (
+        <p className="rounded-lg border border-gain/30 bg-gain/10 px-3.5 py-2.5 text-sm text-gain">
+          Password reset — log in with your new password.
         </p>
       )}
       <Input

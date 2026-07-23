@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
-      data: { name, email, phone, passwordHash, role },
+      data: { name, email, phone, passwordHash, role, status: "ACTIVE" },
     });
 
     return NextResponse.json(

@@ -10,6 +10,7 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
       email: true,
       phone: true,
       role: true,
+      status: true,
       createdAt: true,
       userAlgos: { where: { enabled: true }, select: { algoId: true } },
     },
@@ -21,6 +22,7 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
     email: u.email,
     phone: u.phone,
     role: u.role,
+    status: u.status,
     createdAt: u.createdAt.toISOString(),
     enabledAlgoCount: u.userAlgos.length,
   }));

@@ -27,6 +27,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
+  if (user.status !== "ACTIVE") {
+    return NextResponse.json(
+      { error: "Your account is pending admin approval." },
+      { status: 403 },
+    );
+  }
+
   await createSessionCookie({ sub: user.id, role: user.role, email: user.email });
 
   return NextResponse.json({

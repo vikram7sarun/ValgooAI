@@ -11,12 +11,15 @@ export function UsersTable({
   users,
   currentUserId,
   onDelete,
+  onApprove,
 }: {
   users: AdminUser[];
   currentUserId: string;
   onDelete: (id: string) => void;
+  onApprove: (id: string) => void;
 }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const handleDelete = async (user: AdminUser) => {
     if (!confirm(`Delete ${user.name} (${user.email})? This cannot be undone.`)) return;
@@ -31,6 +34,18 @@ export function UsersTable({
     }
   };
 
+  const handleApprove = async (user: AdminUser) => {
+    setApprovingId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/approve`, { method: "POST" });
+      if (res.ok) {
+        onApprove(user.id);
+      }
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
   return (
     <Table>
       <Thead>
@@ -39,6 +54,7 @@ export function UsersTable({
           <Th>Email</Th>
           <Th>Phone</Th>
           <Th>Role</Th>
+          <Th>Status</Th>
           <Th>Algos enabled</Th>
           <Th>Joined</Th>
           <Th>Actions</Th>
@@ -53,10 +69,23 @@ export function UsersTable({
             <Td>
               <Badge tone={user.role === "ADMIN" ? "brown" : "muted"}>{user.role}</Badge>
             </Td>
+            <Td>
+              <Badge tone={user.status === "ACTIVE" ? "gain" : "muted"}>{user.status}</Badge>
+            </Td>
             <Td>{user.enabledAlgoCount}</Td>
             <Td className="text-muted">{new Date(user.createdAt).toLocaleDateString("en-IN")}</Td>
             <Td>
               <div className="flex items-center gap-2">
+                {user.status === "PENDING" && (
+                  <Button
+                    variant="secondary"
+                    className="px-3 py-1.5 text-xs"
+                    disabled={approvingId === user.id}
+                    onClick={() => handleApprove(user)}
+                  >
+                    {approvingId === user.id ? "Approving…" : "Approve"}
+                  </Button>
+                )}
                 <Link href={`/admin/users/${user.id}`}>
                   <Button variant="secondary" className="px-3 py-1.5 text-xs">
                     Manage
@@ -76,7 +105,7 @@ export function UsersTable({
         ))}
         {users.length === 0 && (
           <Tr>
-            <Td colSpan={7} className="text-center text-muted">
+            <Td colSpan={8} className="text-center text-muted">
               No users yet.
             </Td>
           </Tr>

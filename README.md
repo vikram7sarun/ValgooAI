@@ -39,7 +39,7 @@ instrumentation.ts (runs once per server boot, Node runtime)
 
 ### Data model (`prisma/schema.prisma`)
 
-- **User** — name, email, phone, passwordHash, role (`USER`/`ADMIN`), country/experience.
+- **User** — name, email, phone, passwordHash, role (`USER`/`ADMIN`), status (`PENDING`/`ACTIVE`), resetTokenHash/resetTokenExpiresAt, country/experience.
 - **Algo** — name, marketType (`INDIA`/`FOREX`), description.
 - **UserAlgo** — join table; `enabled`/`enabledAt` per user per algo. This is what an admin toggles.
 - **AlgoSignal** — log of generated signals (instrument, signal, metric, timestamp) per algo; feeds both the dashboard's initial load and the SSE stream.
@@ -49,9 +49,35 @@ instrumentation.ts (runs once per server boot, Node runtime)
 - Passwords hashed with `bcryptjs` (cost 12).
 - Sessions are JWTs (`jose`, HS256) in an httpOnly, `sameSite=lax` cookie, 7-day expiry.
 - **Two independent RBAC layers**: `middleware.ts` gates `/dashboard*`, `/admin*`,
-  and their `/api/*` equivalents at the edge; every admin route handler *also*
-  calls `requireAdmin()` itself, so admin protection isn't just a hidden URL —
-  it still holds even if the middleware matcher were ever misconfigured.
+  `/settings*`, and their `/api/*` equivalents at the edge; every admin route
+  handler *also* calls `requireAdmin()` itself, so admin protection isn't just
+  a hidden URL — it still holds even if the middleware matcher were ever
+  misconfigured.
+
+### Self-registration approval queue
+
+New accounts created via `/register` get `status = PENDING` (the schema
+default) and cannot log in — `/api/auth/login` (`src/app/api/auth/login/route.ts`)
+checks `status` after verifying the password and rejects with a 403 if the
+account isn't `ACTIVE`. Admins see a `PENDING` badge and an "Approve" button
+per user on `/admin` (`src/components/admin/UsersTable.tsx`), which calls
+`POST /api/admin/users/[id]/approve`. Users created directly by an admin
+(via "+ Add user") are created `ACTIVE` immediately, since an admin already
+vouches for them.
+
+### Password reset — another mock-delivery seam
+
+Same philosophy as the mock market data/signals: the reset-token *mechanics*
+are fully real (random token, sha256-hashed at rest, 1-hour expiry — see
+`src/lib/auth/passwordReset.ts`), but there's no email provider wired up yet.
+`POST /api/auth/forgot-password` logs the reset link to the server console
+and, only when `NODE_ENV !== "production"`, also returns it directly in the
+JSON response so local testing doesn't require SMTP setup. **Swap point for
+later**: replace the `console.log` in
+`src/app/api/auth/forgot-password/route.ts` with a real email send (e.g.
+Resend/SendGrid) and drop the dev-mode response field — nothing else in the
+reset flow (`/api/auth/reset-password`, the `/reset-password` page) needs to
+change.
 
 ### Real-time design — and its current limitation
 

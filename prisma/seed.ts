@@ -1,4 +1,4 @@
-import { PrismaClient, Role, MarketType, SignalAction } from "@prisma/client";
+import { PrismaClient, Role, AccountStatus, MarketType, SignalAction } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -6,25 +6,27 @@ const prisma = new PrismaClient();
 async function main() {
   const admin = await prisma.user.upsert({
     where: { email: "admin@valgoo.ai" },
-    update: {},
+    update: { status: AccountStatus.ACTIVE },
     create: {
       name: "Platform Admin",
       email: "admin@valgoo.ai",
       phone: "+919999999999",
       passwordHash: await bcrypt.hash("Admin@123", 12),
       role: Role.ADMIN,
+      status: AccountStatus.ACTIVE,
     },
   });
 
   const testUser = await prisma.user.upsert({
     where: { email: "trader@valgoo.ai" },
-    update: {},
+    update: { status: AccountStatus.ACTIVE },
     create: {
       name: "Test Trader",
       email: "trader@valgoo.ai",
       phone: "+919888888888",
       passwordHash: await bcrypt.hash("Test@123", 12),
       role: Role.USER,
+      status: AccountStatus.ACTIVE,
       country: "India",
       experience: "Intermediate",
     },

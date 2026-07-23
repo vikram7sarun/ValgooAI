@@ -26,6 +26,9 @@ export function DashboardNav({ name, role }: { name: string; role: "USER" | "ADM
               Admin
             </Link>
           )}
+          <Link href="/settings" className="text-sm text-muted hover:text-cream">
+            Settings
+          </Link>
           <span className="text-sm text-muted">{name}</span>
           <Button variant="ghost" onClick={handleLogout} className="px-3 py-2">
             <LogOut className="h-4 w-4" />

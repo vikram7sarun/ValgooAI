@@ -1,11 +1,14 @@
 import type { MarketType } from "./algo";
 
+export type AccountStatus = "PENDING" | "ACTIVE";
+
 export interface AdminUser {
   id: string;
   name: string;
   email: string;
   phone: string | null;
   role: "USER" | "ADMIN";
+  status: AccountStatus;
   createdAt: string;
   enabledAlgoCount: number;
 }
