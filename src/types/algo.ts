@@ -30,3 +30,20 @@ export interface DashboardAlgo {
   enabledAt: string | null;
   recentSignals: DashboardSignal[];
 }
+
+export interface StrategyListItem {
+  id: string;
+  name: string;
+  marketType: MarketType;
+  description: string;
+  winRatePct: number;
+  maxDrawdownPct: number;
+  avgReturnPct: number;
+  riskLevel: string;
+  deployed: boolean;
+  enabledAt: string | null;
+}
+
+export interface StrategyDetail extends StrategyListItem {
+  recentSignals: DashboardSignal[];
+}

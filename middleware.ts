@@ -36,9 +36,11 @@ export const config = {
     "/dashboard/:path*",
     "/admin/:path*",
     "/settings/:path*",
+    "/strategies/:path*",
     "/api/dashboard/:path*",
     "/api/admin/:path*",
     "/api/algos/:path*",
     "/api/profile/:path*",
+    "/api/strategies/:path*",
   ],
 };

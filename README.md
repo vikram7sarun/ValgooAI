@@ -40,8 +40,8 @@ instrumentation.ts (runs once per server boot, Node runtime)
 ### Data model (`prisma/schema.prisma`)
 
 - **User** — name, email, phone, passwordHash, role (`USER`/`ADMIN`), status (`PENDING`/`ACTIVE`/`SUSPENDED`), resetTokenHash/resetTokenExpiresAt, country/experience.
-- **Algo** — name, marketType (`INDIA`/`FOREX`), description.
-- **UserAlgo** — join table; `enabled`/`enabledAt` per user per algo. This is what an admin toggles.
+- **Algo** — name, marketType (`INDIA`/`FOREX`), description, plus static mock performance stats: winRatePct, maxDrawdownPct, avgReturnPct, riskLevel (`Low`/`Medium`/`High`).
+- **UserAlgo** — join table; `enabled`/`enabledAt` per user per algo. Written to by both the admin toggle (`/admin/users/[id]`) and the user's own self-service deploy (`/strategies`) — same row, two entry points.
 - **AlgoSignal** — log of generated signals (instrument, signal, metric, timestamp) per algo; feeds both the dashboard's initial load and the SSE stream.
 
 ### Auth & RBAC
@@ -76,6 +76,25 @@ table also has client-side search (name/email/phone) and pagination
 (10 rows/page) since `getAdminUsers()` loads the full list up front — fine
 at MVP scale, revisit with server-side pagination if the user count grows
 much larger.
+
+### Strategy catalog & self-service deploy
+
+`/strategies` (`src/app/strategies/`) lets a logged-in user browse every
+`Algo` with its win rate/max drawdown/avg return/risk level, and deploy or
+undeploy it for their own account via `PATCH /api/strategies/[id]/deploy`
+(`src/app/api/strategies/[id]/deploy/route.ts`) — no admin approval step,
+unlike the registration queue. This writes to the same `UserAlgo` row the
+admin toggle (`/admin/users/[id]`) already uses, so either path works and
+they stay in sync; a strategy a user self-deploys shows up on `/dashboard`
+with live signals exactly like an admin-enabled one. Clicking into a
+strategy (`/strategies/[id]`) shows the full stat grid plus its 10 most
+recent signals, reusing `getStrategyDetail()` (`src/lib/strategies.ts`).
+
+Performance stats (win rate, drawdown, etc.) are **static values set in
+`prisma/seed.ts`**, not computed from live signal history — deliberately
+simple for now. **Broker linking is explicitly out of scope** for this
+round (no OAuth, no real account connection, no order execution) — deploy
+only ever toggles the local `UserAlgo.enabled` flag.
 
 ### Password reset — another mock-delivery seam
 

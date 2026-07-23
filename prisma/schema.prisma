@@ -49,13 +49,17 @@ model User {
 }
 
 model Algo {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  marketType  MarketType
-  description String
-  createdAt   DateTime     @default(now())
-  userAlgos   UserAlgo[]
-  signals     AlgoSignal[]
+  id             String       @id @default(cuid())
+  name           String       @unique
+  marketType     MarketType
+  description    String
+  winRatePct     Float        @default(0)
+  maxDrawdownPct Float        @default(0)
+  avgReturnPct   Float        @default(0)
+  riskLevel      String       @default("Medium")
+  createdAt      DateTime     @default(now())
+  userAlgos      UserAlgo[]
+  signals        AlgoSignal[]
 
   @@map("algos")
 }

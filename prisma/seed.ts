@@ -35,29 +35,41 @@ async function main() {
   const [goldAlgo, niftyAlgo] = await Promise.all([
     prisma.algo.upsert({
       where: { name: "Gold Algo" },
-      update: {},
+      update: { winRatePct: 64, maxDrawdownPct: 8.5, avgReturnPct: 1.2, riskLevel: "Medium" },
       create: {
         name: "Gold Algo",
         marketType: MarketType.FOREX,
         description: "Momentum signal generator for Gold (XAU/USD).",
+        winRatePct: 64,
+        maxDrawdownPct: 8.5,
+        avgReturnPct: 1.2,
+        riskLevel: "Medium",
       },
     }),
     prisma.algo.upsert({
       where: { name: "Nifty Algo" },
-      update: {},
+      update: { winRatePct: 58, maxDrawdownPct: 12, avgReturnPct: 0.9, riskLevel: "High" },
       create: {
         name: "Nifty Algo",
         marketType: MarketType.INDIA,
         description: "Trend-following signal generator for Nifty 50.",
+        winRatePct: 58,
+        maxDrawdownPct: 12,
+        avgReturnPct: 0.9,
+        riskLevel: "High",
       },
     }),
     prisma.algo.upsert({
       where: { name: "EUR-USD Algo" },
-      update: {},
+      update: { winRatePct: 71, maxDrawdownPct: 5, avgReturnPct: 0.6, riskLevel: "Low" },
       create: {
         name: "EUR-USD Algo",
         marketType: MarketType.FOREX,
         description: "Mean-reversion signal generator for EUR/USD.",
+        winRatePct: 71,
+        maxDrawdownPct: 5,
+        avgReturnPct: 0.6,
+        riskLevel: "Low",
       },
     }),
   ]);
