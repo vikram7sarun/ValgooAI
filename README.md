@@ -85,6 +85,10 @@ data are explicitly out of scope for this MVP.
 
 Prerequisites: Node.js 20+, Docker Desktop.
 
+### First-time setup
+
+Run this once, when setting the project up for the first time:
+
 ```bash
 cp .env.example .env
 # edit .env and set JWT_SECRET, e.g.:
@@ -96,6 +100,48 @@ npm run prisma:migrate      # creates the schema
 npm run prisma:seed         # seeds admin, a test user, and 3 algos
 npm run dev                 # http://localhost:3000
 ```
+
+### Restarting later (next day / after a reboot)
+
+Postgres data lives in a named Docker volume (`valgooai_valgoo_pgdata`), so it
+survives container/computer restarts. You do **not** need to repeat
+`npm install`, `npm run prisma:migrate`, or `npm run prisma:seed` — just bring
+the services back up:
+
+```bash
+# 1. Start Docker Desktop if it isn't already running
+open -a Docker            # macOS; wait ~10-20s for it to finish starting
+
+# 2. Start Postgres (reuses existing data/volume)
+cd /path/to/ValgooAI
+docker compose up -d
+
+# 3. Start the app
+npm run dev                # http://localhost:3000
+```
+
+The mock signal generator and market ticker boot automatically on server
+start via `instrumentation.ts` — look for `[signal-generator] started...` in
+the terminal output to confirm.
+
+Optionally, to browse the database in a UI instead of `psql`:
+
+```bash
+npx prisma studio           # http://localhost:5555
+```
+
+Only re-run `npm install` if `node_modules` was deleted, and only re-run
+`npm run prisma:migrate`/`npm run prisma:seed` if you intentionally reset the
+database (see `npm run db:reset` below) or pulled new schema changes.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Port 3000 already in use | `lsof -ti:3000 \| xargs kill -9`, then retry `npm run dev` |
+| App can't connect to Postgres | `docker compose ps` to confirm the container is `Up`; check logs with `docker compose logs postgres` |
+| Docker daemon not running | `open -a Docker` (macOS) and wait for it to fully start before `docker compose up -d` |
+| Forgot the seeded login credentials | See the Seeded accounts table below |
 
 ### Seeded accounts
 
@@ -114,6 +160,7 @@ Rotate or remove these credentials before deploying anywhere non-local.
 | `npm run prisma:migrate` | Apply/create migrations |
 | `npm run prisma:seed` | Re-run the seed script |
 | `npm run db:reset` | Drop, recreate, migrate, and reseed the database |
+| `npx prisma studio` | Browse/edit the database in a UI at `http://localhost:5555` |
 
 ## Known MVP limitations
 
