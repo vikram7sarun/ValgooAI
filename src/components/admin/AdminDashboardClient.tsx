@@ -24,6 +24,7 @@ export function AdminDashboardClient({
   const stats = [
     { label: "Total users", value: users.length },
     { label: "Pending approvals", value: users.filter((u) => u.status === "PENDING").length },
+    { label: "Suspended", value: users.filter((u) => u.status === "SUSPENDED").length },
     { label: "Admins", value: users.filter((u) => u.role === "ADMIN").length },
     { label: "Algos", value: algos.length },
     { label: "Active enrollments", value: algos.reduce((sum, a) => sum + a.activeUserCount, 0) },
@@ -69,6 +70,9 @@ export function AdminDashboardClient({
           onDelete={(id) => setUsers((prev) => prev.filter((u) => u.id !== id))}
           onApprove={(id) =>
             setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: "ACTIVE" } : u)))
+          }
+          onSuspend={(id) =>
+            setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: "SUSPENDED" } : u)))
           }
         />
       </div>

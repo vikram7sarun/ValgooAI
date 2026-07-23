@@ -15,6 +15,7 @@ enum Role {
 enum AccountStatus {
   PENDING
   ACTIVE
+  SUSPENDED
 }
 
 enum MarketType {

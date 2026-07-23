@@ -1,6 +1,6 @@
 import type { MarketType } from "./algo";
 
-export type AccountStatus = "PENDING" | "ACTIVE";
+export type AccountStatus = "PENDING" | "ACTIVE" | "SUSPENDED";
 
 export interface AdminUser {
   id: string;

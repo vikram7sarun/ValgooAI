@@ -39,7 +39,7 @@ instrumentation.ts (runs once per server boot, Node runtime)
 
 ### Data model (`prisma/schema.prisma`)
 
-- **User** — name, email, phone, passwordHash, role (`USER`/`ADMIN`), status (`PENDING`/`ACTIVE`), resetTokenHash/resetTokenExpiresAt, country/experience.
+- **User** — name, email, phone, passwordHash, role (`USER`/`ADMIN`), status (`PENDING`/`ACTIVE`/`SUSPENDED`), resetTokenHash/resetTokenExpiresAt, country/experience.
 - **Algo** — name, marketType (`INDIA`/`FOREX`), description.
 - **UserAlgo** — join table; `enabled`/`enabledAt` per user per algo. This is what an admin toggles.
 - **AlgoSignal** — log of generated signals (instrument, signal, metric, timestamp) per algo; feeds both the dashboard's initial load and the SSE stream.
@@ -64,6 +64,18 @@ per user on `/admin` (`src/components/admin/UsersTable.tsx`), which calls
 `POST /api/admin/users/[id]/approve`. Users created directly by an admin
 (via "+ Add user") are created `ACTIVE` immediately, since an admin already
 vouches for them.
+
+An admin can also **suspend** an already-active user via
+`POST /api/admin/users/[id]/suspend` (blocked from targeting their own
+account, same guard pattern as self-delete) — `/api/auth/login` rejects a
+`SUSPENDED` user with a distinct message from the pending-approval one.
+Reactivating a suspended user reuses the same `/approve` endpoint (both
+cases just set `status: "ACTIVE"`), so there's no separate "reactivate"
+route — only the button label differs in `UsersTable.tsx`. The admin users
+table also has client-side search (name/email/phone) and pagination
+(10 rows/page) since `getAdminUsers()` loads the full list up front — fine
+at MVP scale, revisit with server-side pagination if the user count grows
+much larger.
 
 ### Password reset — another mock-delivery seam
 
