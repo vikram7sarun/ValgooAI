@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MarketType {
+  INDIA
+  FOREX
+}
+
+enum SignalAction {
+  BUY
+  SELL
+  HOLD
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  phone        String?    @unique
+  passwordHash String
+  role         Role       @default(USER)
+  country      String?
+  experience   String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  userAlgos    UserAlgo[]
+
+  @@map("users")
+}
+
+model Algo {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  marketType  MarketType
+  description String
+  createdAt   DateTime     @default(now())
+  userAlgos   UserAlgo[]
+  signals     AlgoSignal[]
+
+  @@map("algos")
+}
+
+model UserAlgo {
+  id        String    @id @default(cuid())
+  userId    String
+  algoId    String
+  enabled   Boolean   @default(false)
+  enabledAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  algo      Algo      @relation(fields: [algoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, algoId])
+  @@map("user_algos")
+}
+
+model AlgoSignal {
+  id          String       @id @default(cuid())
+  algoId      String
+  instrument  String
+  signal      SignalAction
+  metric      Float?
+  metricLabel String?
+  timestamp   DateTime     @default(now())
+  algo        Algo         @relation(fields: [algoId], references: [id], onDelete: Cascade)
+
+  @@index([algoId, timestamp])
+  @@map("algo_signals")
+}

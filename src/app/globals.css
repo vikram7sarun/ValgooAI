@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --color-base: #0b0a09;
+  --color-base-surface: #161310;
+  --color-base-elevated: #1f1a15;
+
+  --color-brown-50: #f7f1ea;
+  --color-brown-100: #ecdfd0;
+  --color-brown-200: #d9bfa0;
+  --color-brown-300: #c49b6f;
+  --color-brown-400: #a97a4d;
+  --color-brown-500: #8a5a35;
+  --color-brown-600: #6b4326;
+  --color-brown-700: #4e2f1a;
+  --color-brown-800: #331f11;
+  --color-brown-900: #1c1109;
+
+  --color-cream: #f5efe6;
+  --color-muted: #9c9186;
+  --color-border: #2a2420;
+
+  --color-gain: #3ecf6b;
+  --color-loss: #ef5350;
+}
+
+@theme inline {
+  --color-base: var(--color-base);
+  --color-base-surface: var(--color-base-surface);
+  --color-base-elevated: var(--color-base-elevated);
+
+  --color-brown-50: var(--color-brown-50);
+  --color-brown-100: var(--color-brown-100);
+  --color-brown-200: var(--color-brown-200);
+  --color-brown-300: var(--color-brown-300);
+  --color-brown-400: var(--color-brown-400);
+  --color-brown-500: var(--color-brown-500);
+  --color-brown-600: var(--color-brown-600);
+  --color-brown-700: var(--color-brown-700);
+  --color-brown-800: var(--color-brown-800);
+  --color-brown-900: var(--color-brown-900);
+
+  --color-cream: var(--color-cream);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+
+  --color-gain: var(--color-gain);
+  --color-loss: var(--color-loss);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-cream);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--color-brown-600);
+  color: var(--color-cream);
+}
