@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { AdminUser } from "@/types/admin";
 import { Table, Thead, Th, Tr, Td } from "@/components/ui/Table";
@@ -29,9 +30,11 @@ export function UsersTable({
   onApprove: (id: string) => void;
   onSuspend: (id: string) => void;
 }) {
+  const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [suspendingId, setSuspendingId] = useState<string | null>(null);
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
@@ -89,6 +92,23 @@ export function UsersTable({
       }
     } finally {
       setSuspendingId(null);
+    }
+  };
+
+  const handleImpersonate = async (user: AdminUser) => {
+    setImpersonatingId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/impersonate`, { method: "POST" });
+      if (res.ok) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        alert(body.error ?? "Could not log in as this user");
+        setImpersonatingId(null);
+      }
+    } catch {
+      setImpersonatingId(null);
     }
   };
 
@@ -158,6 +178,16 @@ export function UsersTable({
                       onClick={() => handleSuspend(user)}
                     >
                       {suspendingId === user.id ? "Suspending…" : "Suspend"}
+                    </Button>
+                  )}
+                  {user.role !== "ADMIN" && (
+                    <Button
+                      variant="secondary"
+                      className="px-3 py-1.5 text-xs"
+                      disabled={impersonatingId === user.id}
+                      onClick={() => handleImpersonate(user)}
+                    >
+                      {impersonatingId === user.id ? "Logging in…" : "Login as"}
                     </Button>
                   )}
                   <Link href={`/admin/users/${user.id}`}>

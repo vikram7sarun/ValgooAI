@@ -57,6 +57,8 @@ model User {
   updatedAt    DateTime   @updatedAt
   userAlgos    UserAlgo[]
   journalEntries TradeJournalEntry[]
+  impersonationsAsAdmin  ImpersonationLog[] @relation("ImpersonationAdmin")
+  impersonationsAsTarget ImpersonationLog[] @relation("ImpersonationTarget")
 
   @@map("users")
 }
@@ -128,4 +130,17 @@ model TradeJournalEntry {
 
   @@index([userId, entryTime])
   @@map("trade_journal_entries")
+}
+
+model ImpersonationLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  targetUserId String
+  startedAt    DateTime @default(now())
+  admin        User     @relation("ImpersonationAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  targetUser   User     @relation("ImpersonationTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([targetUserId])
+  @@map("impersonation_logs")
 }

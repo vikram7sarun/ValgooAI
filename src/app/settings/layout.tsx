@@ -20,7 +20,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex min-h-screen flex-col bg-base">
-      <DashboardNav name={user.name} role={user.role} />
+      <DashboardNav name={user.name} role={user.role} impersonating={!!session.impersonatedBy} />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">{children}</main>
     </div>
   );

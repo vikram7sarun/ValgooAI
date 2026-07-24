@@ -44,6 +44,7 @@ instrumentation.ts (runs once per server boot, Node runtime)
 - **UserAlgo** — join table; `enabled`/`enabledAt` per user per algo. Written to by both the admin toggle (`/admin/users/[id]`) and the user's own self-service deploy (`/strategies`) — same row, two entry points.
 - **AlgoSignal** — log of generated signals (instrument, signal, metric, timestamp) per algo; feeds both the dashboard's initial load and the SSE stream.
 - **TradeJournalEntry** — a user's manually-logged trades: instrument, direction, entry/exit price+time, screenshot URL, reason/emotion/mistake/news, an optional link to an `Algo` ("strategy used"), and a fixed tag set (`FOMO`/`REVENGE`/`LATE_ENTRY`/`PERFECT_TRADE`) stored as a native Postgres array.
+- **ImpersonationLog** — append-only audit trail of admin "Login as user" events (admin id, target user id, timestamp).
 
 ### Auth & RBAC
 
@@ -54,6 +55,42 @@ instrumentation.ts (runs once per server boot, Node runtime)
   handler *also* calls `requireAdmin()` itself, so admin protection isn't just
   a hidden URL — it still holds even if the middleware matcher were ever
   misconfigured.
+
+> **Known dev-mode caveat**: under `npm run dev` (Turbopack), `middleware.ts`
+> does not appear to execute at all — confirmed by testing (no `next=`
+> query param gets added on redirect, which only middleware does). This is
+> **not a security hole**: every route's own `requireUser()`/`requireAdmin()`
+> check still runs and correctly blocks unauthorized access either way — the
+> only symptom is a blocked *page* request landing on `/login` instead of
+> `/dashboard`. Confirmed fully correct, including the edge layer, under
+> `npm run build && npm run start` (production). Root cause not identified
+> yet (survived a full `.next` + `node_modules/.cache` clear); worth
+> revisiting if it's still present next time this project is picked up.
+
+### Admin "Login as user" (impersonation)
+
+Admins can get a genuine session *as* any non-admin user via a "Login as"
+button per row on `/admin` (`POST /api/admin/users/[id]/impersonate`) —
+not a read-only mirror of their data, an actual session swap. This means
+zero special-casing anywhere else in the app: `/dashboard`, `/strategies`,
+`/journal`, `/settings` all already scope everything to `session.sub`, so
+they just work. One correctness property worth knowing: because the
+impersonated session's `role` genuinely becomes `"USER"`, `requireAdmin()`
+rejects it on every `/api/admin/*` call — **an admin impersonating a user
+can only ever do what that user could do, nothing more**, verified by
+attempting `/api/admin/*` calls mid-impersonation (403).
+
+Mechanics: the admin's own raw session cookie is copied into a second
+cookie (`admin_return_token`) before the `session` cookie gets overwritten
+with a token for the target user (carrying an extra `impersonatedBy` JWT
+claim); `DashboardNav` shows a persistent red banner whenever that claim is
+present, with a "Return to admin" button hitting
+`POST /api/auth/stop-impersonation` to restore the saved cookie. Can't
+impersonate another admin or your own account. Every impersonation start is
+logged to `ImpersonationLog` (admin id, target user id, timestamp) — no
+viewer UI built for it, query it directly (`psql`/Prisma Studio) if needed;
+worth having given `/journal` holds fairly personal data (emotions,
+mistakes).
 
 ### Self-registration approval queue
 

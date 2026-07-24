@@ -4,6 +4,7 @@ export type SessionPayload = {
   sub: string;
   role: "USER" | "ADMIN";
   email: string;
+  impersonatedBy?: string;
 };
 
 const ALG = "HS256";
@@ -33,7 +34,9 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       typeof payload.email === "string" &&
       (payload.role === "USER" || payload.role === "ADMIN")
     ) {
-      return { sub: payload.sub, role: payload.role, email: payload.email };
+      const impersonatedBy =
+        typeof payload.impersonatedBy === "string" ? payload.impersonatedBy : undefined;
+      return { sub: payload.sub, role: payload.role, email: payload.email, impersonatedBy };
     }
     return null;
   } catch {
