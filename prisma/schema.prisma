@@ -41,6 +41,12 @@ enum TradeTag {
   PERFECT_TRADE
 }
 
+enum MarketplaceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String     @id @default(cuid())
   name         String
@@ -59,6 +65,8 @@ model User {
   journalEntries TradeJournalEntry[]
   impersonationsAsAdmin  ImpersonationLog[] @relation("ImpersonationAdmin")
   impersonationsAsTarget ImpersonationLog[] @relation("ImpersonationTarget")
+  marketplaceStrategies  MarketplaceStrategy[]
+  strategyRentals        StrategyRental[]
 
   @@map("users")
 }
@@ -143,4 +151,49 @@ model ImpersonationLog {
   @@index([adminId])
   @@index([targetUserId])
   @@map("impersonation_logs")
+}
+
+model MarketplaceStrategy {
+  id            String              @id @default(cuid())
+  ownerId       String
+  name          String
+  description   String
+  marketType    MarketType
+  pricePerMonth Float
+  status        MarketplaceStatus   @default(PENDING)
+  createdAt     DateTime            @default(now())
+  owner         User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  rentals       StrategyRental[]
+  backtest      MarketplaceBacktest?
+
+  @@index([status])
+  @@map("marketplace_strategies")
+}
+
+model StrategyRental {
+  id         String              @id @default(cuid())
+  renterId   String
+  strategyId String
+  startedAt  DateTime            @default(now())
+  expiresAt  DateTime
+  renter     User                @relation(fields: [renterId], references: [id], onDelete: Cascade)
+  strategy   MarketplaceStrategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@index([renterId])
+  @@index([strategyId])
+  @@map("strategy_rentals")
+}
+
+model MarketplaceBacktest {
+  id             String              @id @default(cuid())
+  strategyId     String              @unique
+  winRatePct     Float
+  maxDrawdownPct Float
+  totalReturnPct Float
+  totalTrades    Int
+  equityCurve    Float[]
+  generatedAt    DateTime            @default(now())
+  strategy       MarketplaceStrategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@map("marketplace_backtests")
 }

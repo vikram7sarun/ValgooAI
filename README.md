@@ -45,6 +45,9 @@ instrumentation.ts (runs once per server boot, Node runtime)
 - **AlgoSignal** — log of generated signals (instrument, signal, metric, timestamp) per algo; feeds both the dashboard's initial load and the SSE stream.
 - **TradeJournalEntry** — a user's manually-logged trades: instrument, direction, entry/exit price+time, screenshot URL, reason/emotion/mistake/news, an optional link to an `Algo` ("strategy used"), and a fixed tag set (`FOMO`/`REVENGE`/`LATE_ENTRY`/`PERFECT_TRADE`) stored as a native Postgres array.
 - **ImpersonationLog** — append-only audit trail of admin "Login as user" events (admin id, target user id, timestamp).
+- **MarketplaceStrategy** — a user-published strategy listing: name, description, marketType, pricePerMonth, moderation `status` (`PENDING`/`APPROVED`/`REJECTED`). Separate from `Algo` — see "Strategy Marketplace" below.
+- **StrategyRental** — a renter/strategy pair with `expiresAt`; "active" is derived (`expiresAt > now()`), not a stored status.
+- **MarketplaceBacktest** — one synthetic backtest report per strategy (`winRatePct`/`maxDrawdownPct`/`totalReturnPct`/`totalTrades`/`equityCurve`), 1:1, overwritten on re-run.
 
 ### Auth & RBAC
 
@@ -114,6 +117,40 @@ table also has client-side search (name/email/phone) and pagination
 (10 rows/page) since `getAdminUsers()` loads the full list up front — fine
 at MVP scale, revisit with server-side pagination if the user count grows
 much larger.
+
+### Strategy Marketplace (publish / rent / backtest)
+
+`/marketplace` is a **separate system from `/strategies`** — deliberately.
+`Algo` rows are admin-curated and wired into the live mock signal
+generator (`src/lib/signals/generator.ts`); `MarketplaceStrategy` rows are
+user-published, never get live streamed signals, and prove themselves via
+a **synthetic backtest** instead (`src/lib/marketplace/backtest.ts` —
+no real historical price data exists anywhere in this app, same mock
+philosophy as everything else here).
+
+- **Publish**: any user can publish via `/marketplace/publish`; new listings
+  start `PENDING` and are invisible to everyone but the owner and admins
+  until an admin approves them on `/admin/marketplace` (linked from a
+  pending-count card on the main `/admin` page) — mirrors the
+  self-registration approval queue.
+- **Rent is fully mocked — no real payment gateway.** Confirmed with the
+  user: this deliberately follows the same pattern as the rest of this
+  MVP (mock market data, mock signals, mock forgot-password email, the
+  paused MetaApi integration). "Rent" (`POST /api/marketplace/[id]/rent`)
+  just creates a `StrategyRental` row good for 30 days — no money moves
+  anywhere. Real payment (Stripe/Razorpay) is a clean seam to add later
+  without restructuring anything else here.
+- **What renting actually unlocks**: headline backtest stats (win rate,
+  drawdown, return, trade count) are always public on a listing — the
+  storefront. The strategy's full description and equity curve are gated
+  server-side in `getListingDetail()` (`src/lib/marketplace.ts`) —
+  `description`/`equityCurve` come back `null` in the API response itself
+  for a non-owner/non-renter/non-admin, not just hidden client-side, so
+  the paywalled content is never actually sent over the wire to someone
+  who hasn't rented.
+- **Backtest**: only the listing's owner can trigger `POST /api/marketplace/[id]/backtest`
+  (403 otherwise); each run overwrites the single `MarketplaceBacktest` row
+  for that strategy (no history kept — the latest run is what's shown).
 
 ### Strategy catalog & self-service deploy
 

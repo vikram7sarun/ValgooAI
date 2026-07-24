@@ -68,6 +68,9 @@ export function DashboardNav({
             <Link href="/strategies" className="text-sm text-muted hover:text-cream">
               Strategies
             </Link>
+            <Link href="/marketplace" className="text-sm text-muted hover:text-cream">
+              Marketplace
+            </Link>
             <Link href="/journal" className="text-sm text-muted hover:text-cream">
               Journal
             </Link>
