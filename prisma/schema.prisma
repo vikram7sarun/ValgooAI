@@ -29,6 +29,18 @@ enum SignalAction {
   HOLD
 }
 
+enum TradeDirection {
+  BUY
+  SELL
+}
+
+enum TradeTag {
+  FOMO
+  REVENGE
+  LATE_ENTRY
+  PERFECT_TRADE
+}
+
 model User {
   id           String     @id @default(cuid())
   name         String
@@ -44,6 +56,7 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   userAlgos    UserAlgo[]
+  journalEntries TradeJournalEntry[]
 
   @@map("users")
 }
@@ -60,6 +73,7 @@ model Algo {
   createdAt      DateTime     @default(now())
   userAlgos      UserAlgo[]
   signals        AlgoSignal[]
+  journalEntries TradeJournalEntry[]
 
   @@map("algos")
 }
@@ -89,4 +103,29 @@ model AlgoSignal {
 
   @@index([algoId, timestamp])
   @@map("algo_signals")
+}
+
+model TradeJournalEntry {
+  id            String         @id @default(cuid())
+  userId        String
+  algoId        String?
+  instrument    String
+  direction     TradeDirection
+  entryPrice    Float
+  exitPrice     Float?
+  entryTime     DateTime
+  exitTime      DateTime?
+  screenshotUrl String?
+  reason        String?
+  emotion       String?
+  mistake       String?
+  news          String?
+  tags          TradeTag[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  algo          Algo?          @relation(fields: [algoId], references: [id], onDelete: SetNull)
+
+  @@index([userId, entryTime])
+  @@map("trade_journal_entries")
 }

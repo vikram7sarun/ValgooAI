@@ -43,6 +43,7 @@ instrumentation.ts (runs once per server boot, Node runtime)
 - **Algo** — name, marketType (`INDIA`/`FOREX`), description, plus static mock performance stats: winRatePct, maxDrawdownPct, avgReturnPct, riskLevel (`Low`/`Medium`/`High`).
 - **UserAlgo** — join table; `enabled`/`enabledAt` per user per algo. Written to by both the admin toggle (`/admin/users/[id]`) and the user's own self-service deploy (`/strategies`) — same row, two entry points.
 - **AlgoSignal** — log of generated signals (instrument, signal, metric, timestamp) per algo; feeds both the dashboard's initial load and the SSE stream.
+- **TradeJournalEntry** — a user's manually-logged trades: instrument, direction, entry/exit price+time, screenshot URL, reason/emotion/mistake/news, an optional link to an `Algo` ("strategy used"), and a fixed tag set (`FOMO`/`REVENGE`/`LATE_ENTRY`/`PERFECT_TRADE`) stored as a native Postgres array.
 
 ### Auth & RBAC
 
@@ -95,6 +96,33 @@ Performance stats (win rate, drawdown, etc.) are **static values set in
 simple for now. **Broker linking is explicitly out of scope** for this
 round (no OAuth, no real account connection, no order execution) — deploy
 only ever toggles the local `UserAlgo.enabled` flag.
+
+### Trade journal
+
+`/journal` is a **manual** trade journal — there's no live broker feed
+wired into this app (MT5/MetaApi integration was scoped out, see below), so
+every entry is logged by the user through a form (`src/components/journal/JournalEntryForm.tsx`)
+rather than auto-populated. It captures instrument, direction, entry/exit
+price+time, an optional screenshot upload, reason/emotion/mistake/news
+notes, an optional link to one of the platform's strategies, and a fixed
+set of tags (FOMO, Revenge, Late Entry, Perfect Trade — a native Postgres
+array on `TradeJournalEntry`, no join table needed for a small closed set).
+P&L is **derived in the UI**, not stored (`src/lib/journalPnl.ts`),
+direction-aware and only shown once an exit price exists.
+
+**Screenshot storage**: saved to local disk under `public/uploads/trade-screenshots/`
+(`src/lib/uploads.ts`) rather than an object-storage service like S3 —
+consistent with this session's cost-conscious choices, and viable because
+the app's real deployment target is a persistent VPS, not serverless. Files
+are served by Next.js's static handling at that same public path; the only
+protection is an unguessable UUID filename, not auth-gated serving — a
+known, documented MVP simplification, not something to rely on for
+sensitive content.
+
+Every journal API route is self-scoped (`requireUser()` + a `userId` match
+in the query, not just the row's `id`) so one user can never read, edit, or
+delete another user's entries — confirmed to 404 rather than 403 on
+mismatch, avoiding leaking whether an id exists at all.
 
 ### Password reset — another mock-delivery seam
 

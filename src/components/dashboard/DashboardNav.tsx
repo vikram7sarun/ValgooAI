@@ -29,6 +29,9 @@ export function DashboardNav({ name, role }: { name: string; role: "USER" | "ADM
           <Link href="/strategies" className="text-sm text-muted hover:text-cream">
             Strategies
           </Link>
+          <Link href="/journal" className="text-sm text-muted hover:text-cream">
+            Journal
+          </Link>
           <Link href="/settings" className="text-sm text-muted hover:text-cream">
             Settings
           </Link>
